@@ -178,6 +178,11 @@ class Editor:
             box.bind("<Control-a>", self.select_all)
             box.bind("<Control-A>", self.select_all)
             box.bind("<Button-1>", lambda e: e.widget.focus_set())
+        self.lower_box.bind("<<Paste>>", self.paste)
+        self.lower_box.bind("<Control-v>", self.paste)
+        self.lower_box.bind("<Control-V>", self.paste)
+        self.lower_box.bind("<Shift-Insert>", self.paste)
+        self.lower_box.bind("<KeyPress>", self.typed, add="+")
         self.show()
 
     def select_all(self, event):
@@ -186,6 +191,31 @@ class Editor:
         box.tag_add("sel", "1.0", "end-1c")
         box.mark_set("insert", "end-1c")
         return "break"
+
+    def delete_selection(self):
+        box = self.lower_box
+        if box.tag_ranges("sel"):
+            box.delete("sel.first", "sel.last")
+
+    def paste(self, event=None):
+        try:
+            text = self.root.clipboard_get()
+        except tk.TclError:
+            return "break"
+        self.lower_box.edit_separator()
+        self.delete_selection()
+        self.lower_box.insert("insert", text)
+        self.lower_box.see("insert")
+        self.lower_box.edit_separator()
+        return "break"
+
+    def typed(self, event):
+        if not event.char or not event.char.isprintable():
+            return None
+        if event.state & 0x4 or event.state & 0x8:
+            return None
+        self.delete_selection()
+        return None
 
     def store(self):
         self.steps[self.index]["lower"] = self.lower_box.get("1.0", "end").strip()
