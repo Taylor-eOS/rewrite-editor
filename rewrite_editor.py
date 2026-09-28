@@ -174,7 +174,18 @@ class Editor:
         root.bind("<Alt-Left>", lambda e: self.back())
         root.bind("<Alt-Right>", lambda e: self.forward())
         root.bind("<Control-s>", lambda e: self.save())
+        for box in (self.upper_box, self.lower_box):
+            box.bind("<Control-a>", self.select_all)
+            box.bind("<Control-A>", self.select_all)
+            box.bind("<Button-1>", lambda e: e.widget.focus_set())
         self.show()
+
+    def select_all(self, event):
+        box = event.widget
+        box.tag_remove("sel", "1.0", "end")
+        box.tag_add("sel", "1.0", "end-1c")
+        box.mark_set("insert", "end-1c")
+        return "break"
 
     def store(self):
         self.steps[self.index]["lower"] = self.lower_box.get("1.0", "end").strip()
